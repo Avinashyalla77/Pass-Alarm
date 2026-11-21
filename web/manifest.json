@@ -1,0 +1,18 @@
+{
+  "name": "PassAlarm - Cognitive Wakeup",
+  "short_name": "PassAlarm",
+  "description": "Smart wake-up alarm that requires entering your secret key to stop ringing.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b091a",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

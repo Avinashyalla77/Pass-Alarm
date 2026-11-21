@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PassAlarm - Cognitive Key Wakeup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PassAlarm">
+  <link rel="apple-touch-icon" href="icon.png">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #0b091a; /* Deep Indigo Void */
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 0;
+    }
+    .app-shell {
+      width: 100%;
+      max-width: 490px;
+      min-height: 100vh;
+      background: #120e2e; /* Rich Indigo Base */
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 0 60px rgba(79, 70, 229, 0.25);
+      border-left: 1px solid #282163;
+      border-right: 1px solid #282163;
+    }
+    header {
+      padding: 20px 20px 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #282163;
+      background: #161238;
+    }
+    .brand-title {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* ANIMATED RUNNING CLOCK */
+    .running-clock-icon {
+      width: 32px;
+      height: 32px;
+      position: relative;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .running-clock-large {
+      width: 76px;
+      height: 76px;
+      position: relative;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+    .clock-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+    .clock-hand-hour {
+      transform-origin: 50px 50px;
+      animation: rotateHour 12s linear infinite;
+    }
+    .clock-hand-minute {
+      transform-origin: 50px 50px;
+      animation: rotateMinute 3s linear infinite;
+    }
+    .clock-hand-second {
+      transform-origin: 50px 50px;
+      animation: rotateSecond 1s linear infinite;
+    }
+    @keyframes rotateHour {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes rotateMinute {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes rotateSecond {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: #a5b4fc;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+    .live-clock {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      background: #231c54;
+      padding: 7px 12px;
+      border-radius: 12px;
+      color: #c7d2fe;
+      border: 1px solid #3730a3;
+    }
+    .night-late-pill {
+      margin: 16px 20px 4px 20px;
+      padding: 11px 16px;
+      background: linear-gradient(135deg, #1e1847 0%, #2e226e 100%);
+      border: 1px solid #4f46e5;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 18px rgba(79, 70, 229, 0.25);
+    }
+    .night-late-pill .late-icon {
+      font-size: 20px;
+      filter: drop-shadow(0 0 6px #818cf8);
+      animation: gentleFloat 2s ease-in-out infinite alternate;
+      display: inline-block;
+    }
+    @keyframes gentleFloat {
+      from { transform: translateY(0); }
+      to { transform: translateY(-3px) scale(1.05); }
+    }
+    .night-late-pill .late-message {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.2px;
+    }
+    .banner {
+      background: #1c1742;
+      margin: 16px 20px 10px 20px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border-left: 4px solid #6366f1;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #c7d2fe;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .banner svg {
+      flex-shrink: 0;
+      color: #818cf8;
+    }
+    .content-area {
+      flex: 1;
+      padding: 10px 20px 100px 20px;
+      overflow-y: auto;
+    }
+    .alarm-card {
+      background: #1d1746;
+      border: 1px solid #312a6e;
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+      transition: all 0.2s ease;
+    }
+    .alarm-card.disabled {
+      opacity: 0.55;
+      background: #130f2e;
+      border-color: #211a4d;
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-time {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .time-digits {
+      font-size: 38px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #ffffff;
+    }
+    .time-period {
+      font-size: 16px;
+      font-weight: 700;
+      color: #a5b4fc;
+    }
+    .switch-toggle {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 28px;
+    }
+    .switch-toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #312a6e;
+      transition: .3s;
+      border-radius: 28px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 4px;
+      bottom: 4px;
+      background-color: #818cf8;
+      transition: .3s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #4f46e5;
+    }
+    input:checked + .slider:before {
+      transform: translateX(22px);
+      background-color: #ffffff;
+    }
+    .card-label {
+      font-size: 15px;
+      font-weight: 600;
+      color: #e0e7ff;
+      margin-top: 4px;
+    }
+    .card-badges {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: #130f2e;
+      padding: 5px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #c7d2fe;
+      border: 1px solid #282163;
+    }
+    .badge.days-badge {
+      color: #38bdf8;
+      border-color: #1e3a8a;
+    }
+    .card-hint {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #a5b4fc;
+      font-style: italic;
+      background: #130f2e80;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+    .card-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid #282163;
+    }
+    .btn-test {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #1e1b4b;
+      color: #a5b4fc;
+      border: 1px solid #4338ca;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-test:hover {
+      background: #312e81;
+      color: #ffffff;
+    }
+    .btn-delete {
+      background: transparent;
+      border: none;
+      color: #f43f5e;
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+    }
+    .btn-delete:hover {
+      color: #fb7185;
+    }
+    .empty-state {
+      text-align: center;
+      padding-top: 60px;
+      color: #6366f1;
+    }
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+    .empty-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #c7d2fe;
+      margin-bottom: 6px;
+    }
+    .fab {
+      position: absolute;
+      right: 20px;
+      bottom: 24px;
+      width: 60px;
+      height: 60px;
+      border-radius: 30px;
+      background: #4f46e5;
+      color: white;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+      z-index: 10;
+    }
+    .fab:hover {
+      transform: scale(1.05);
+      background: #4338ca;
+    }
+
+    /* MODAL STYLES */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(11, 9, 26, 0.85);
+      backdrop-filter: blur(5px);
+      display: none;
+      justify-content: center;
+      align-items: flex-end;
+      z-index: 50;
+    }
+    .modal-sheet {
+      width: 100%;
+      max-width: 490px;
+      background: #141033;
+      border-top-left-radius: 26px;
+      border-top-right-radius: 26px;
+      border-top: 1px solid #3730a3;
+      max-height: 94vh;
+      display: flex;
+      flex-direction: column;
+      animation: slideUp 0.25s ease-out;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .modal-header {
+      padding: 18px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #282163;
+      background: #18133d;
+    }
+    .modal-header h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .btn-close {
+      background: transparent;
+      border: none;
+      color: #a5b4fc;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .modal-body {
+      padding: 16px 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .form-group {
+      margin-bottom: 18px;
+    }
+    .form-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #a5b4fc;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* 1-MINUTE PRECISION TIME SPINNER */
+    .time-picker-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1e1847;
+      padding: 14px 10px;
+      border-radius: 16px;
+      border: 1px solid #3730a3;
+      gap: 8px;
+    }
+    .spin-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 70px;
+    }
+    .spin-btn {
+      background: #282163;
+      border: 1px solid #3730a3;
+      color: #a5b4fc;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 4px 12px;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .spin-btn:hover {
+      background: #4f46e5;
+      color: white;
+    }
+    .spin-input {
+      width: 60px;
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      font-size: 32px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      text-align: center;
+      outline: none;
+      margin: 4px 0;
+    }
+    .spin-sub {
+      font-size: 10px;
+      color: #818cf8;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .time-colon {
+      font-size: 30px;
+      font-weight: 800;
+      color: #6366f1;
+      margin-bottom: 14px;
+    }
+    .ampm-toggle {
+      display: flex;
+      flex-direction: column;
+      background: #100c2a;
+      border-radius: 8px;
+      padding: 3px;
+      margin-left: 8px;
+      border: 1px solid #282163;
+    }
+    .ampm-btn {
+      background: transparent;
+      border: none;
+      color: #818cf8;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .ampm-btn.active {
+      background: #4f46e5;
+      color: white;
+    }
+    .quick-minute-row {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .quick-min-btn {
+      background: #231c54;
+      border: 1px solid #3730a3;
+      color: #c7d2fe;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .quick-min-btn:hover {
+      background: #4f46e5;
+      color: #ffffff;
+    }
+
+    /* DAYS OF THE WEEK SELECTOR */
+    .days-picker-container {
+      background: #1e1847;
+      border: 1px solid #3730a3;
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .days-buttons-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+    .day-pill {
+      flex: 1;
+      aspect-ratio: 1;
+      max-width: 44px;
+      border-radius: 22px;
+      background: #120e2e;
+      border: 1px solid #312a6e;
+      color: #a5b4fc;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .day-pill.active {
+      background: #4f46e5;
+      color: white;
+      border-color: #818cf8;
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+    }
+    .days-quick-presets {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+    .preset-btn {
+      background: transparent;
+      border: 1px solid #312a6e;
+      color: #a5b4fc;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .preset-btn:hover {
+      border-color: #6366f1;
+      color: #ffffff;
+    }
+
+    .form-input {
+      width: 100%;
+      background: #1e1847;
+      border: 1px solid #3730a3;
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: #f8fafc;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus {
+      border-color: #818cf8;
+    }
+
+    /* AUDIO PICKER CARD */
+    .audio-picker-box {
+      background: #1e1847;
+      border: 1px solid #3730a3;
+      border-radius: 14px;
+      padding: 14px;
+    }
+    .audio-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .audio-icon {
+      font-size: 22px;
+    }
+    .audio-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #f8fafc;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 300px;
+    }
+    .audio-sub {
+      font-size: 11px;
+      color: #a5b4fc;
+    }
+    .audio-buttons {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-file-label {
+      background: #4f46e5;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-file-label:hover {
+      background: #4338ca;
+    }
+    .btn-preview {
+      background: #059669;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-preview.playing {
+      background: #e11d48;
+    }
+
+    /* SAVED KEY BADGE */
+    .saved-key-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #231c54;
+      border: 1px solid #4f46e5;
+      border-radius: 10px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: #c7d2fe;
+    }
+    .saved-key-pill {
+      background: #4f46e5;
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 6px;
+    }
+
+    /* PASSKEY VALIDATION BADGES */
+    .validation-checklist {
+      background: rgba(30, 24, 71, 0.6);
+      border: 1px solid #3730a3;
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-top: 8px;
+      font-size: 12px;
+    }
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #818cf8;
+      margin: 4px 0;
+    }
+    .check-item.valid {
+      color: #34d399;
+      font-weight: 600;
+    }
+    .check-bullet {
+      font-size: 13px;
+    }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid #282163;
+      display: flex;
+      gap: 10px;
+      background: #18133d;
+    }
+    .btn-cancel {
+      flex: 1;
+      background: #231c54;
+      color: #c7d2fe;
+      border: 1px solid #3730a3;
+      padding: 12px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-save {
+      flex: 2;
+      background: #4f46e5;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-save:hover {
+      background: #4338ca;
+    }
+    .btn-save:disabled {
+      background: #282163;
+      color: #6366f1;
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* RINGING SCREEN (LOCKDOWN) */
+    .ringing-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #090616;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-around;
+      padding: 40px 24px;
+      z-index: 100;
+    }
+    .alarm-pulsing-clock {
+      animation: pulseAlert 0.7s infinite alternate;
+      display: inline-block;
+    }
+    @keyframes pulseAlert {
+      from { transform: scale(1); filter: drop-shadow(0 0 10px #f43f5e); }
+      to { transform: scale(1.25); filter: drop-shadow(0 0 35px #f43f5e); }
+    }
+    .ringing-time {
+      font-size: 56px;
+      font-weight: 800;
+      letter-spacing: -2px;
+      margin-top: 12px;
+      text-align: center;
+      color: #ffffff;
+    }
+    .ringing-label {
+      font-size: 20px;
+      font-weight: 600;
+      color: #e0e7ff;
+      text-align: center;
+    }
+    .ringing-sound-badge {
+      font-size: 12px;
+      color: #818cf8;
+      background: #18133d;
+      padding: 6px 14px;
+      border-radius: 12px;
+      border: 1px solid #3730a3;
+      margin-top: 10px;
+      display: inline-block;
+    }
+    .lockdown-box {
+      width: 100%;
+      max-width: 400px;
+      background: #141033;
+      border: 2px solid #f43f5e;
+      border-radius: 20px;
+      padding: 22px;
+      text-align: center;
+      box-shadow: 0 0 45px rgba(244, 63, 94, 0.3);
+    }
+    .lockdown-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #f43f5e;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .lockdown-desc {
+      font-size: 13px;
+      color: #c7d2fe;
+      margin-bottom: 18px;
+      line-height: 1.4;
+    }
+    .input-challenge-wrapper {
+      position: relative;
+      margin-bottom: 14px;
+    }
+    .input-challenge {
+      width: 100%;
+      background: #1e1847;
+      border: 2px solid #6366f1;
+      border-radius: 12px;
+      padding: 14px;
+      color: white;
+      font-size: 17px;
+      font-weight: 700;
+      text-align: center;
+      font-family: inherit;
+      outline: none;
+    }
+    .input-challenge.error {
+      border-color: #ef4444;
+      background: #450a0a30;
+      animation: shake 0.4s ease-in-out;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+    .error-msg {
+      color: #f87171;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: -6px;
+      margin-bottom: 12px;
+      display: none;
+    }
+    .hint-box {
+      background: #1e1847;
+      border-left: 3px solid #6366f1;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #e0e7ff;
+      margin-bottom: 14px;
+      text-align: left;
+      display: none;
+    }
+    .btn-show-hint {
+      background: transparent;
+      border: none;
+      color: #818cf8;
+      font-size: 12px;
+      text-decoration: underline;
+      cursor: pointer;
+      margin-bottom: 14px;
+      display: inline-block;
+    }
+    .btn-verify-stop {
+      width: 100%;
+      background: #e11d48;
+      color: white;
+      border: none;
+      padding: 16px;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(225, 29, 72, 0.45);
+      transition: background 0.2s;
+    }
+    .btn-verify-stop:hover {
+      background: #be123c;
+    }
+    .success-view {
+      display: none;
+      text-align: center;
+    }
+    .success-view h2 {
+      font-size: 28px;
+      color: #10b981;
+      margin: 16px 0 8px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-shell">
+    <header>
+      <div>
+        <div class="brand-title">
+          <!-- ANIMATED RUNNING CLOCK SYMBOL -->
+          <div class="running-clock-icon">
+            <svg class="clock-svg" viewBox="0 0 100 100">
+              <!-- Clock Frame -->
+              <circle cx="50" cy="50" r="44" stroke="#6366f1" stroke-width="6" fill="#1e1847"/>
+              <!-- Hour Markers -->
+              <line x1="50" y1="12" x2="50" y2="20" stroke="#818cf8" stroke-width="4" stroke-linecap="round"/>
+              <line x1="50" y1="88" x2="50" y2="80" stroke="#818cf8" stroke-width="4" stroke-linecap="round"/>
+              <line x1="12" y1="50" x2="20" y2="50" stroke="#818cf8" stroke-width="4" stroke-linecap="round"/>
+              <line x1="88" y1="50" x2="80" y2="50" stroke="#818cf8" stroke-width="4" stroke-linecap="round"/>
+              <!-- Running Hour Hand -->
+              <line class="clock-hand-hour" x1="50" y1="50" x2="50" y2="26" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>
+              <!-- Running Minute Hand -->
+              <line class="clock-hand-minute" x1="50" y1="50" x2="50" y2="16" stroke="#38bdf8" stroke-width="3.5" stroke-linecap="round"/>
+              <!-- Running Second Hand -->
+              <line class="clock-hand-second" x1="50" y1="58" x2="50" y2="14" stroke="#f43f5e" stroke-width="2" stroke-linecap="round"/>
+              <!-- Center Pivot -->
+              <circle cx="50" cy="50" r="4.5" fill="#f43f5e"/>
+            </svg>
+          </div>
+          PassAlarm
+        </div>
+        <div class="brand-subtitle">Cognitive Key Wakeup</div>
+      </div>
+      <div class="live-clock" id="liveClock">00:00:00 AM</div>
+    </header>
+
+    <div class="night-late-pill">
+      <span class="late-icon">🌙</span>
+      <span class="late-message">Its getting late buddy</span>
+    </div>
+
+    <div class="banner">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+      <div>To stop any alarm, you must type your configured secret key. No simple off button!</div>
+    </div>
+
+    <div class="content-area" id="alarmsList">
+      <!-- Injected dynamically -->
+    </div>
+
+    <button class="fab" id="btnOpenCreate" title="Add New Alarm">+</button>
+  </div>
+
+  <!-- ADD / EDIT MODAL -->
+  <div class="modal-overlay" id="alarmModal">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h3 id="modalTitle">Set New Alarm</h3>
+        <button class="btn-close" id="btnCloseModal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- 1-MINUTE PRECISION TIME SPINNER -->
+        <div class="form-group">
+          <label class="form-label">
+            <span>Alarm Time</span>
+            <span style="font-size: 11px; color: #818cf8;">Supports any exact minute (e.g. 8:31)</span>
+          </label>
+          <div class="time-picker-row">
+            <!-- Hour -->
+            <div class="spin-col">
+              <button class="spin-btn" id="hourUp">▲</button>
+              <input type="text" class="spin-input" id="hourInput" value="08" maxlength="2">
+              <button class="spin-btn" id="hourDown">▼</button>
+              <span class="spin-sub">Hour</span>
+            </div>
+            
+            <div class="time-colon">:</div>
+
+            <!-- Minute (1-Minute Exact Precision) -->
+            <div class="spin-col">
+              <button class="spin-btn" id="minUp">▲</button>
+              <input type="text" class="spin-input" id="minInput" value="31" maxlength="2">
+              <button class="spin-btn" id="minDown">▼</button>
+              <span class="spin-sub">Min (+/-1)</span>
+            </div>
+
+            <!-- AM / PM -->
+            <div class="ampm-toggle">
+              <button class="ampm-btn active" id="btnAM">AM</button>
+              <button class="ampm-btn" id="btnPM">PM</button>
+            </div>
+          </div>
+
+          <!-- Quick Minute Nudges -->
+          <div class="quick-minute-row">
+            <button class="quick-min-btn" id="minMinus5">-5m</button>
+            <button class="quick-min-btn" id="minMinus1">-1m</button>
+            <button class="quick-min-btn" id="minPlus1">+1m</button>
+            <button class="quick-min-btn" id="minPlus5">+5m</button>
+          </div>
+        </div>
+
+        <!-- 7-DAYS OF THE WEEK SELECTOR -->
+        <div class="form-group">
+          <label class="form-label">
+            <span>Repeat on Days</span>
+            <span id="daysSummaryText" style="font-size: 11px; color: #38bdf8;">Every day</span>
+          </label>
+          <div class="days-picker-container">
+            <div class="days-buttons-row">
+              <button class="day-pill active" data-day="0">S</button>
+              <button class="day-pill active" data-day="1">M</button>
+              <button class="day-pill active" data-day="2">T</button>
+              <button class="day-pill active" data-day="3">W</button>
+              <button class="day-pill active" data-day="4">T</button>
+              <button class="day-pill active" data-day="5">F</button>
+              <button class="day-pill active" data-day="6">S</button>
+            </div>
+            <div class="days-quick-presets">
+              <button class="preset-btn" id="presetEveryday">Every day</button>
+              <button class="preset-btn" id="presetWeekdays">Weekdays</button>
+              <button class="preset-btn" id="presetWeekends">Weekends</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- LABEL -->
+        <div class="form-group">
+          <label class="form-label">Alarm Label</label>
+          <input type="text" class="form-input" id="inputLabel" placeholder="e.g. Morning Workout">
+        </div>
+
+        <!-- SOUND PICKER FROM DEVICE -->
+        <div class="form-group">
+          <label class="form-label">Alarm Sound (From Device)</label>
+          <div class="audio-picker-box">
+            <div class="audio-header">
+              <div class="audio-icon">🎵</div>
+              <div>
+                <div class="audio-title" id="audioFileName">Default Alert Tone</div>
+                <div class="audio-sub" id="audioFileSub">Built-in rhythmic tone</div>
+              </div>
+            </div>
+            <div class="audio-buttons">
+              <label class="btn-file-label">
+                📁 Choose File
+                <input type="file" id="fileAudioInput" accept="audio/*" style="display: none;">
+              </label>
+              <button class="btn-preview" id="btnPreviewSound">▶ Listen</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECRET PASSKEY WITH AUTO-REMEMBER -->
+        <div class="form-group">
+          <label class="form-label">
+            <span>Unlock Passkey (Required to stop alarm)</span>
+          </label>
+          
+          <div class="saved-key-banner" id="savedKeyBanner" style="display: none;">
+            <span>🔑 Saved Key Auto-applied</span>
+            <span class="saved-key-pill">Saved</span>
+          </div>
+
+          <input type="text" class="form-input" id="inputPasskey" placeholder="5-16 chars, 1 number, 1 symbol" autocomplete="off" autocorrect="off" autocapitalize="none">
+          
+          <div class="validation-checklist">
+            <div class="check-item" id="chkLength">
+              <span class="check-bullet">○</span> 5 to 16 characters (<span id="keyLengthCount">0</span>/16)
+            </div>
+            <div class="check-item" id="chkNumber">
+              <span class="check-bullet">○</span> At least one integer (0-9)
+            </div>
+            <div class="check-item" id="chkSymbol">
+              <span class="check-bullet">○</span> At least one special character (!@#$%^&*...)
+            </div>
+          </div>
+        </div>
+
+        <!-- HINT -->
+        <div class="form-group">
+          <label class="form-label">Password Hint (Optional)</label>
+          <input type="text" class="form-input" id="inputHint" placeholder="e.g. Birthday + exclamation mark">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" id="btnCancelModal">Cancel</button>
+        <button class="btn-save" id="btnSaveAlarm" disabled>Save Alarm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RINGING SCREEN MODAL -->
+  <div class="ringing-overlay" id="ringingScreen">
+    <div style="text-align: center;">
+      <div class="alarm-pulsing-clock">
+        <div class="running-clock-large">
+          <svg class="clock-svg" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="44" stroke="#f43f5e" stroke-width="7" fill="#1e1847"/>
+            <line x1="50" y1="12" x2="50" y2="20" stroke="#f43f5e" stroke-width="5" stroke-linecap="round"/>
+            <line x1="50" y1="88" x2="50" y2="80" stroke="#f43f5e" stroke-width="5" stroke-linecap="round"/>
+            <line x1="12" y1="50" x2="20" y2="50" stroke="#f43f5e" stroke-width="5" stroke-linecap="round"/>
+            <line x1="88" y1="50" x2="80" y2="50" stroke="#f43f5e" stroke-width="5" stroke-linecap="round"/>
+            <line class="clock-hand-hour" x1="50" y1="50" x2="50" y2="25" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+            <line class="clock-hand-minute" x1="50" y1="50" x2="50" y2="15" stroke="#38bdf8" stroke-width="4.5" stroke-linecap="round"/>
+            <line class="clock-hand-second" x1="50" y1="60" x2="50" y2="12" stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="50" cy="50" r="5" fill="#f43f5e"/>
+          </svg>
+        </div>
+      </div>
+      <div class="ringing-time" id="ringTime">08:31 AM</div>
+      <div class="ringing-label" id="ringLabel">Wake Up Challenge</div>
+      <div class="ringing-sound-badge" id="ringSoundBadge">🎵 Custom Device Sound</div>
+    </div>
+
+    <div class="lockdown-box" id="lockdownBox">
+      <div class="lockdown-title">🔒 LOCKDOWN ACTIVE</div>
+      <div class="lockdown-desc">The alarm and vibration will NOT stop until you enter your exact secret key!</div>
+
+      <div class="input-challenge-wrapper">
+        <input type="text" class="input-challenge" id="challengeInput" placeholder="Enter secret key..." autocomplete="off" autocorrect="off" autocapitalize="none">
+      </div>
+
+      <div class="error-msg" id="errorMsg">❌ Incorrect key! Try again.</div>
+
+      <div id="hintContainer">
+        <button class="btn-show-hint" id="btnRevealHint">Show Hint</button>
+        <div class="hint-box" id="hintBox"></div>
+      </div>
+
+      <button class="btn-verify-stop" id="btnVerifyStop">VERIFY & STOP ALARM</button>
+    </div>
+
+    <div class="success-view" id="successView">
+      <div style="font-size: 72px;">🎉</div>
+      <h2>Alarm Dismissed!</h2>
+      <p style="color: #c7d2fe;">Good morning! Have an energetic day.</p>
+    </div>
+  </div>
+
+  <script>
+    const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    // --- AUDIO SYSTEM (Web Audio API fallback + HTML5 Audio) ---
+    let audioContext = null;
+    let fallbackOscillator = null;
+    let customAudioPlayer = new Audio();
+    customAudioPlayer.loop = true;
+    let previewAudioPlayer = new Audio();
+    let isPreviewPlaying = false;
+
+    // Built-in synthetic energetic alarm sound
+    function startDefaultSynthesizer() {
+      stopAudio();
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        audioContext = new AudioCtx();
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(880, audioContext.currentTime);
+
+        setInterval(() => {
+          if (audioContext && audioContext.state === 'running') {
+            const t = audioContext.currentTime;
+            osc.frequency.setValueAtTime((t % 0.4 < 0.2) ? 880 : 1320, t);
+          }
+        }, 150);
+
+        gain.gain.setValueAtTime(0.35, audioContext.currentTime);
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        osc.start();
+        fallbackOscillator = osc;
+      } catch (e) {
+        console.warn('Web Audio error:', e);
+      }
+    }
+
+    function playAlarmAudio(audioSrc) {
+      stopAudio();
+      if (audioSrc && (audioSrc.startsWith('data:audio') || audioSrc.startsWith('blob:') || audioSrc.startsWith('http'))) {
+        customAudioPlayer.src = audioSrc;
+        customAudioPlayer.play().catch(() => {
+          startDefaultSynthesizer();
+        });
+      } else {
+        startDefaultSynthesizer();
+      }
+
+      // Vibration (Android browsers support navigator.vibrate)
+      if ('vibrate' in navigator) {
+        navigator.vibrate([800, 400, 800, 400, 800, 400]);
+        window._vibInterval = setInterval(() => {
+          navigator.vibrate([800, 400, 800, 400]);
+        }, 2400);
+      }
+    }
+
+    function stopAudio() {
+      if (window._vibInterval) {
+        clearInterval(window._vibInterval);
+        window._vibInterval = null;
+      }
+      if ('vibrate' in navigator) {
+        navigator.vibrate(0);
+      }
+      try {
+        customAudioPlayer.pause();
+        customAudioPlayer.currentTime = 0;
+      } catch (e) {}
+
+      if (fallbackOscillator) {
+        try { fallbackOscillator.stop(); } catch (e) {}
+        fallbackOscillator = null;
+      }
+      if (audioContext) {
+        try { audioContext.close(); } catch (e) {}
+        audioContext = null;
+      }
+    }
+
+    // --- STATE MANAGEMENT ---
+    let alarms = JSON.parse(localStorage.getItem('passalarm_alarms_v2') || '[]');
+    let savedMasterKey = localStorage.getItem('passalarm_saved_key') || '';
+    let savedMasterHint = localStorage.getItem('passalarm_saved_hint') || '';
+
+    // If master key is not yet in dedicated storage, migrate from first alarm
+    if (!savedMasterKey && alarms.length > 0 && alarms[0].passkey) {
+      savedMasterKey = alarms[0].passkey;
+      savedMasterHint = alarms[0].hint || '';
+      localStorage.setItem('passalarm_saved_key', savedMasterKey);
+      if (savedMasterHint) localStorage.setItem('passalarm_saved_hint', savedMasterHint);
+    }
+
+    let editingId = null;
+    let selectedAudioDataUrl = null;
+    let selectedAudioName = 'Default Alert Tone';
+    let currentRingingAlarm = null;
+    let lastCheckedMinute = '';
+
+    // Selected Days state for Modal: 0=Sun, 1=Mon ... 6=Sat
+    let selectedDays = [0, 1, 2, 3, 4, 5, 6]; // Default to all 7 days
+
+    // Clock
+    function updateClock() {
+      const now = new Date();
+      let h = now.getHours();
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      document.getElementById('liveClock').textContent = `${String(h).padStart(2, '0')}:${m}:${s} ${ampm}`;
+
+      // Check alarms trigger on exact minute (all 7 days support)
+      const current24h = `${String(now.getHours()).padStart(2, '0')}:${m}`;
+      const todayDayOfWeek = now.getDay(); // 0-6
+
+      if (!currentRingingAlarm && s === '00' && lastCheckedMinute !== current24h) {
+        lastCheckedMinute = current24h;
+        alarms.forEach(al => {
+          const days = al.days || [0, 1, 2, 3, 4, 5, 6];
+          if (al.enabled && al.time === current24h && days.includes(todayDayOfWeek)) {
+            triggerRinging(al);
+          }
+        });
+      }
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function formatDaysSummary(days) {
+      if (!days || days.length === 7) return 'Every day';
+      if (days.length === 5 && [1, 2, 3, 4, 5].every(d => days.includes(d))) return 'Weekdays';
+      if (days.length === 2 && [0, 6].every(d => days.includes(d))) return 'Weekends';
+      if (days.length === 0) return 'Never';
+      return days.map(d => DAY_NAMES[d]).join(', ');
+    }
+
+    // Render Alarms
+    function renderAlarms() {
+      const container = document.getElementById('alarmsList');
+      if (alarms.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">⏰</div>
+            <div class="empty-title">No Alarms Configured</div>
+            <p style="font-size: 13px; color: #818cf8;">Tap the + button below to create your passkey-protected wake-up challenge.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = alarms.map(al => {
+        const [h24, m] = al.time.split(':');
+        let h = parseInt(h24, 10);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        const displayTime = `${String(h).padStart(2, '0')}:${m}`;
+        const daysText = formatDaysSummary(al.days);
+
+        return `
+          <div class="alarm-card ${al.enabled ? '' : 'disabled'}">
+            <div class="card-top">
+              <div class="card-time">
+                <span class="time-digits">${displayTime}</span>
+                <span class="time-period">${ampm}</span>
+              </div>
+              <label class="switch-toggle">
+                <input type="checkbox" ${al.enabled ? 'checked' : ''} onchange="toggleAlarm('${al.id}', this.checked)">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="card-label">${al.label || 'Alarm'}</div>
+            <div class="card-badges">
+              <div class="badge days-badge">📅 ${daysText}</div>
+              <div class="badge">🎵 ${al.soundName || 'Default Sound'}</div>
+              <div class="badge">🔑 Passkey: ${al.passkey.length} chars</div>
+            </div>
+            ${al.hint ? `<div class="card-hint">Hint: ${al.hint}</div>` : ''}
+            <div class="card-actions">
+              <button class="btn-test" onclick="testAlarm('${al.id}')">▶ Test Alarm Challenge</button>
+              <button class="btn-delete" onclick="deleteAlarm('${al.id}')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.toggleAlarm = function(id, val) {
+      alarms = alarms.map(a => a.id === id ? { ...a, enabled: val } : a);
+      saveAlarms();
+      renderAlarms();
+    };
+
+    window.deleteAlarm = function(id) {
+      if (confirm('Delete this alarm?')) {
+        alarms = alarms.filter(a => a.id !== id);
+        saveAlarms();
+        renderAlarms();
+      }
+    };
+
+    window.testAlarm = function(id) {
+      const target = alarms.find(a => a.id === id);
+      if (target) triggerRinging(target);
+    };
+
+    function saveAlarms() {
+      localStorage.setItem('passalarm_alarms_v2', JSON.stringify(alarms));
+    }
+
+    // --- MODAL CONTROLS & FORM ---
+    let modalHour = 8;
+    let modalMin = 31;
+    let modalPeriod = 'AM';
+
+    const modal = document.getElementById('alarmModal');
+    const inputPasskey = document.getElementById('inputPasskey');
+    const inputLabel = document.getElementById('inputLabel');
+    const inputHint = document.getElementById('inputHint');
+    const btnSaveAlarm = document.getElementById('btnSaveAlarm');
+    const hourInput = document.getElementById('hourInput');
+    const minInput = document.getElementById('minInput');
+    const savedKeyBanner = document.getElementById('savedKeyBanner');
+
+    document.getElementById('btnOpenCreate').onclick = () => {
+      editingId = null;
+      document.getElementById('modalTitle').textContent = 'Set New Alarm';
+      modalHour = 8;
+      modalMin = 31;
+      modalPeriod = 'AM';
+      selectedDays = [0, 1, 2, 3, 4, 5, 6];
+      updateDaysPillsUI();
+      inputLabel.value = 'Morning Wakeup';
+
+      // AUTOMATICALLY RE-USE THE SAVED MASTER KEY!
+      if (savedMasterKey) {
+        inputPasskey.value = savedMasterKey;
+        inputHint.value = savedMasterHint || '';
+        savedKeyBanner.style.display = 'flex';
+      } else {
+        inputPasskey.value = '';
+        inputHint.value = '';
+        savedKeyBanner.style.display = 'none';
+      }
+
+      selectedAudioDataUrl = null;
+      selectedAudioName = 'Default Alert Tone';
+      document.getElementById('audioFileName').textContent = selectedAudioName;
+      document.getElementById('audioFileSub').textContent = 'Built-in rhythmic tone';
+      updateTimeDisplay();
+      validateKey(); // Pre-validates immediately if saved key is loaded!
+      modal.style.display = 'flex';
+    };
+
+    document.getElementById('btnCloseModal').onclick = closeModal;
+    document.getElementById('btnCancelModal').onclick = closeModal;
+
+    function closeModal() {
+      stopPreview();
+      modal.style.display = 'none';
+    }
+
+    // 1-Minute Precision Handlers
+    document.getElementById('hourUp').onclick = () => { modalHour = modalHour >= 12 ? 1 : modalHour + 1; updateTimeDisplay(); };
+    document.getElementById('hourDown').onclick = () => { modalHour = modalHour <= 1 ? 12 : modalHour - 1; updateTimeDisplay(); };
+    
+    document.getElementById('minUp').onclick = () => { modalMin = (modalMin + 1) % 60; updateTimeDisplay(); };
+    document.getElementById('minDown').onclick = () => { modalMin = (modalMin - 1 + 60) % 60; updateTimeDisplay(); };
+
+    document.getElementById('minPlus1').onclick = () => { modalMin = (modalMin + 1) % 60; updateTimeDisplay(); };
+    document.getElementById('minMinus1').onclick = () => { modalMin = (modalMin - 1 + 60) % 60; updateTimeDisplay(); };
+    document.getElementById('minPlus5').onclick = () => { modalMin = (modalMin + 5) % 60; updateTimeDisplay(); };
+    document.getElementById('minMinus5').onclick = () => { modalMin = (modalMin - 5 + 60) % 60; updateTimeDisplay(); };
+
+    hourInput.addEventListener('change', () => {
+      let val = parseInt(hourInput.value, 10);
+      if (isNaN(val) || val < 1) val = 1;
+      if (val > 12) val = 12;
+      modalHour = val;
+      updateTimeDisplay();
+    });
+
+    minInput.addEventListener('change', () => {
+      let val = parseInt(minInput.value, 10);
+      if (isNaN(val) || val < 0) val = 0;
+      if (val > 59) val = 59;
+      modalMin = val;
+      updateTimeDisplay();
+    });
+
+    document.getElementById('btnAM').onclick = () => { modalPeriod = 'AM'; updateTimeDisplay(); };
+    document.getElementById('btnPM').onclick = () => { modalPeriod = 'PM'; updateTimeDisplay(); };
+
+    function updateTimeDisplay() {
+      hourInput.value = String(modalHour).padStart(2, '0');
+      minInput.value = String(modalMin).padStart(2, '0');
+      document.getElementById('btnAM').className = 'ampm-btn ' + (modalPeriod === 'AM' ? 'active' : '');
+      document.getElementById('btnPM').className = 'ampm-btn ' + (modalPeriod === 'PM' ? 'active' : '');
+    }
+
+    // 7-DAYS PICKER HANDLERS
+    const dayPills = document.querySelectorAll('.day-pill');
+    dayPills.forEach(pill => {
+      pill.onclick = () => {
+        const day = parseInt(pill.getAttribute('data-day'), 10);
+        if (selectedDays.includes(day)) {
+          if (selectedDays.length > 1) {
+            selectedDays = selectedDays.filter(d => d !== day);
+          }
+        } else {
+          selectedDays.push(day);
+          selectedDays.sort((a, b) => a - b);
+        }
+        updateDaysPillsUI();
+      };
+    });
+
+    document.getElementById('presetEveryday').onclick = () => {
+      selectedDays = [0, 1, 2, 3, 4, 5, 6];
+      updateDaysPillsUI();
+    };
+    document.getElementById('presetWeekdays').onclick = () => {
+      selectedDays = [1, 2, 3, 4, 5];
+      updateDaysPillsUI();
+    };
+    document.getElementById('presetWeekends').onclick = () => {
+      selectedDays = [0, 6];
+      updateDaysPillsUI();
+    };
+
+    function updateDaysPillsUI() {
+      dayPills.forEach(pill => {
+        const day = parseInt(pill.getAttribute('data-day'), 10);
+        if (selectedDays.includes(day)) {
+          pill.classList.add('active');
+        } else {
+          pill.classList.remove('active');
+        }
+      });
+      document.getElementById('daysSummaryText').textContent = formatDaysSummary(selectedDays);
+    }
+
+    // Audio file picker from device
+    document.getElementById('fileAudioInput').onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        selectedAudioName = file.name;
+        document.getElementById('audioFileName').textContent = file.name;
+        document.getElementById('audioFileSub').textContent = `${(file.size / (1024*1024)).toFixed(2)} MB - Custom file from device`;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          selectedAudioDataUrl = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    // Preview audio
+    const btnPreview = document.getElementById('btnPreviewSound');
+    btnPreview.onclick = () => {
+      if (isPreviewPlaying) {
+        stopPreview();
+      } else {
+        if (selectedAudioDataUrl) {
+          previewAudioPlayer.src = selectedAudioDataUrl;
+          previewAudioPlayer.play();
+          btnPreview.textContent = '⏹ Stop';
+          btnPreview.classList.add('playing');
+          isPreviewPlaying = true;
+          previewAudioPlayer.onended = stopPreview;
+        } else {
+          startDefaultSynthesizer();
+          btnPreview.textContent = '⏹ Stop';
+          btnPreview.classList.add('playing');
+          isPreviewPlaying = true;
+        }
+      }
+    };
+
+    function stopPreview() {
+      try { previewAudioPlayer.pause(); previewAudioPlayer.currentTime = 0; } catch (e) {}
+      if (!currentRingingAlarm) stopAudio();
+      btnPreview.textContent = '▶ Listen';
+      btnPreview.classList.remove('playing');
+      isPreviewPlaying = false;
+    }
+
+    // PASSKEY VALIDATION
+    inputPasskey.addEventListener('input', () => {
+      // If user types/modifies the key, hide the auto-applied banner
+      if (inputPasskey.value !== savedMasterKey) {
+        savedKeyBanner.style.display = 'none';
+      }
+      validateKey();
+    });
+
+    function validateKey() {
+      const key = inputPasskey.value;
+      const len = key.length;
+      document.getElementById('keyLengthCount').textContent = len;
+
+      const hasLen = len >= 5 && len <= 16;
+      const hasNum = /[0-9]/.test(key);
+      const hasSym = /[^a-zA-Z0-9\s]/.test(key);
+
+      updateCheckItem('chkLength', hasLen);
+      updateCheckItem('chkNumber', hasNum);
+      updateCheckItem('chkSymbol', hasSym);
+
+      btnSaveAlarm.disabled = !(hasLen && hasNum && hasSym);
+    }
+
+    function updateCheckItem(id, isValid) {
+      const el = document.getElementById(id);
+      if (isValid) {
+        el.className = 'check-item valid';
+        el.querySelector('.check-bullet').textContent = '✔';
+      } else {
+        el.className = 'check-item';
+        el.querySelector('.check-bullet').textContent = '○';
+      }
+    }
+
+    // Save Alarm (and persist the Master Key for future alarms!)
+    btnSaveAlarm.onclick = () => {
+      let h24 = modalHour;
+      if (modalPeriod === 'PM' && modalHour < 12) h24 += 12;
+      if (modalPeriod === 'AM' && modalHour === 12) h24 = 0;
+      const timeStr = `${String(h24).padStart(2, '0')}:${String(modalMin).padStart(2, '0')}`;
+
+      const keyToSave = inputPasskey.value;
+      const hintToSave = inputHint.value.trim();
+
+      // SAVE THIS KEY AS MASTER DEFAULT FOR ALL FUTURE ALARMS!
+      savedMasterKey = keyToSave;
+      savedMasterHint = hintToSave;
+      localStorage.setItem('passalarm_saved_key', savedMasterKey);
+      if (savedMasterHint) {
+        localStorage.setItem('passalarm_saved_hint', savedMasterHint);
+      }
+
+      const newAlarm = {
+        id: editingId || String(Date.now()),
+        time: timeStr,
+        days: selectedDays.slice(),
+        label: inputLabel.value.trim() || 'Alarm',
+        enabled: true,
+        passkey: keyToSave,
+        hint: hintToSave,
+        soundName: selectedAudioName,
+        soundUri: selectedAudioDataUrl
+      };
+
+      if (editingId) {
+        alarms = alarms.map(a => a.id === editingId ? newAlarm : a);
+      } else {
+        alarms.push(newAlarm);
+      }
+
+      saveAlarms();
+      renderAlarms();
+      closeModal();
+    };
+
+    // --- RINGING CHALLENGE SCREEN ---
+    const ringingScreen = document.getElementById('ringingScreen');
+    const challengeInput = document.getElementById('challengeInput');
+    const errorMsg = document.getElementById('errorMsg');
+    const lockdownBox = document.getElementById('lockdownBox');
+    const successView = document.getElementById('successView');
+
+    function triggerRinging(alarm) {
+      currentRingingAlarm = alarm;
+
+      const [h24, m] = alarm.time.split(':');
+      let h = parseInt(h24, 10);
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+
+      document.getElementById('ringTime').textContent = `${String(h).padStart(2, '0')}:${m} ${ampm}`;
+      document.getElementById('ringLabel').textContent = alarm.label || 'Wake Up Challenge';
+      document.getElementById('ringSoundBadge').textContent = `🎵 ${alarm.soundName || 'Default Alert Tone'}`;
+
+      challengeInput.value = '';
+      challengeInput.classList.remove('error');
+      errorMsg.style.display = 'none';
+      lockdownBox.style.display = 'block';
+      successView.style.display = 'none';
+
+      // Hint setup
+      const hintContainer = document.getElementById('hintContainer');
+      const hintBox = document.getElementById('hintBox');
+      const btnRevealHint = document.getElementById('btnRevealHint');
+      if (alarm.hint) {
+        hintContainer.style.display = 'block';
+        btnRevealHint.style.display = 'inline-block';
+        hintBox.style.display = 'none';
+        hintBox.textContent = 'Hint: ' + alarm.hint;
+        btnRevealHint.onclick = () => {
+          hintBox.style.display = 'block';
+          btnRevealHint.style.display = 'none';
+        };
+      } else {
+        hintContainer.style.display = 'none';
+      }
+
+      ringingScreen.style.display = 'flex';
+      playAlarmAudio(alarm.soundUri);
+
+      setTimeout(() => challengeInput.focus(), 300);
+    }
+
+    // Verify key to dismiss
+    document.getElementById('btnVerifyStop').onclick = verifyKey;
+    challengeInput.onkeydown = (e) => {
+      if (e.key === 'Enter') verifyKey();
+    };
+
+    function verifyKey() {
+      if (!currentRingingAlarm) return;
+
+      if (challengeInput.value === currentRingingAlarm.passkey) {
+        // MATCH! Stop sound immediately
+        stopAudio();
+        lockdownBox.style.display = 'none';
+        successView.style.display = 'block';
+
+        setTimeout(() => {
+          ringingScreen.style.display = 'none';
+          currentRingingAlarm = null;
+        }, 1800);
+      } else {
+        // WRONG!
+        challengeInput.classList.add('error');
+        errorMsg.style.display = 'block';
+        setTimeout(() => challengeInput.classList.remove('error'), 500);
+      }
+    }
+
+    // Register Service Worker for PWA (offline & installability)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
+
+    // Initial render
+    renderAlarms();
+  </script>
+</body>
+</html>
